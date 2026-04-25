@@ -3,27 +3,19 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Heart, Truck } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ProductCard, Product } from "@/components/ProductCard";
-import { supabase } from "@/integrations/supabase/client";
+import { ProductCard } from "@/components/ProductCard";
+import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
 import heroImage from "@/assets/hero.jpg";
 
 const Index = () => {
-  const [featured, setFeatured] = useState<Product[]>([]);
+  const [featured, setFeatured] = useState<ShopifyProduct[]>([]);
 
   useEffect(() => {
-    supabase
-      .from("products")
-      .select("id, name, price, category, image_url, stock")
-      .eq("is_active", true)
-      .limit(4)
-      .then(({ data }) => {
-        if (data) setFeatured(data as Product[]);
-      });
+    fetchProducts(4).then(setFeatured).catch(console.error);
   }, []);
 
   return (
     <Layout>
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="grid min-h-[80vh] grid-cols-1 lg:grid-cols-2">
           <div className="flex items-center justify-center px-6 py-16 lg:px-16 gradient-soft">
@@ -37,7 +29,9 @@ const Index = () => {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg" className="rounded-none">
-                  <Link to="/shop">শপ ব্রাউজ করুন <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  <Link to="/shop">
+                    শপ ব্রাউজ করুন <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -46,20 +40,17 @@ const Index = () => {
             <img
               src={heroImage}
               alt="Elegant lingerie collection"
-              width={1536}
-              height={1024}
               className="h-full w-full object-cover"
             />
           </div>
         </div>
       </section>
 
-      {/* Trust badges */}
       <section className="border-y border-border/40 bg-secondary/30 py-10">
         <div className="container mx-auto grid grid-cols-1 gap-8 px-4 md:grid-cols-3">
           {[
             { icon: Heart, title: "ডিসক্রিট প্যাকেজিং", desc: "আপনার গোপনীয়তা আমাদের অগ্রাধিকার" },
-            { icon: Truck, title: "সারা দেশে ডেলিভারি", desc: "ক্যাশ অন ডেলিভারি উপলব্ধ" },
+            { icon: Truck, title: "সারা দেশে ডেলিভারি", desc: "নিরাপদ ও দ্রুত শিপিং" },
             { icon: Sparkles, title: "প্রিমিয়াম কোয়ালিটি", desc: "সাবধানে বাছাই করা পণ্য" },
           ].map((b, i) => (
             <div key={i} className="flex items-center gap-4">
@@ -75,7 +66,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured */}
       <section className="container mx-auto px-4 py-20">
         <div className="mb-12 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-primary">কালেকশন</p>
@@ -83,10 +73,14 @@ const Index = () => {
         </div>
         {featured.length > 0 ? (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8">
-            {featured.map((p) => <ProductCard key={p.id} product={p} />)}
+            {featured.map((p) => (
+              <ProductCard key={p.node.id} product={p} />
+            ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground">শীঘ্রই নতুন পণ্য আসছে...</p>
+          <p className="text-center text-muted-foreground">
+            এখনো কোনো পণ্য নেই — চ্যাটে আমাকে বলুন কী যোগ করতে চান।
+          </p>
         )}
         <div className="mt-12 text-center">
           <Button asChild variant="outline" size="lg" className="rounded-none">
